@@ -1,5 +1,6 @@
 package com.aiCareerCoach.AiCareer.Entity;
 
+import com.aiCareerCoach.AiCareer.Enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -33,6 +34,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
+    @Column(length = 20)
+    @Builder.Default
+    private String plan = "FREE"; // FREE | PRO
+
+    private LocalDateTime planRenewsAt;
     @NotBlank
     @Column(nullable = false)
     private String password; // BCrypt hash

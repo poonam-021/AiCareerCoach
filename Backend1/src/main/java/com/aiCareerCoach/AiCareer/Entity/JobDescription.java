@@ -48,6 +48,10 @@ public class JobDescription {
 
     private String experienceRequired; // e.g. "2-4 years"
 
+    @Column(length = 20)
+    @Builder.Default
+    private String source = "MANUAL"; // MANUAL | QUICK_PASTE
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
