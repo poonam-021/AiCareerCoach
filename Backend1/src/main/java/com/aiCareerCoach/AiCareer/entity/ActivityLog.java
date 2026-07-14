@@ -1,18 +1,20 @@
-package com.aiCareerCoach.AiCareer.Entity;
+package com.aiCareerCoach.AiCareer.entity;
 
+
+import com.aiCareerCoach.AiCareer.Enums.ActivityType;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "refresh_tokens")
+@Table(name = "activity_log")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RefreshToken {
+public class ActivityLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,16 +22,20 @@ public class RefreshToken {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private com.aiCareerCoach.AiCareer.Entity.User user;
+    private User user;
 
-    @Column(nullable = false, unique = true, length = 512)
-    private String token;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ActivityType type;
 
     @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    private String title;
 
-    @Builder.Default
-    private boolean revoked = false;
+    private String meta;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "related_analysis_report_id")
+    private AnalysisReport relatedAnalysisReport; // nullable — not every activity ties to a report
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

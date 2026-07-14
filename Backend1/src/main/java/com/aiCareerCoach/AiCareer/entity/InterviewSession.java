@@ -1,4 +1,4 @@
-package com.aiCareerCoach.AiCareer.Entity;
+package com.aiCareerCoach.AiCareer.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
