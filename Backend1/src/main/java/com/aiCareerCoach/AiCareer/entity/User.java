@@ -1,6 +1,6 @@
 package com.aiCareerCoach.AiCareer.entity;
 
-import com.aiCareerCoach.AiCareer.Enums.Role;
+import com.aiCareerCoach.AiCareer.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

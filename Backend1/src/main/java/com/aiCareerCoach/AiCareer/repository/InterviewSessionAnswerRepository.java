@@ -1,4 +1,4 @@
-package com.aiCareerCoach.AiCareer.Repository;
+package com.aiCareerCoach.AiCareer.repository;
 
 import com.aiCareerCoach.AiCareer.entity.InterviewSessionAnswer;
 import org.springframework.data.jpa.repository.JpaRepository;

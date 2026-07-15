@@ -1,7 +1,7 @@
 package com.aiCareerCoach.AiCareer.entity;
 
 
-import com.aiCareerCoach.AiCareer.Enums.ActivityType;
+import com.aiCareerCoach.AiCareer.enums.ActivityType;
 import jakarta.persistence.*;
 import lombok.*;
 
