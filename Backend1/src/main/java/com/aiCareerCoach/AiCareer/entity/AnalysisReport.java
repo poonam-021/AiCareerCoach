@@ -1,7 +1,7 @@
 package com.aiCareerCoach.AiCareer.entity;
 
 
-import com.aiCareerCoach.AiCareer.Enums.AnalysisStatus;
+import com.aiCareerCoach.AiCareer.enums.AnalysisStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
