@@ -1,16 +1,34 @@
-# React + Vite
+# AI Career Coach
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+AI Career Coach is a full-stack, microservices-based web application that helps job seekers optimize their resumes, evaluate job compatibility, and prepare for interviews using AI.
 
-Currently, two official plugins are available:
+The system consists of a Spring Boot backend for authentication, user management, data persistence, and API orchestration, along with a FastAPI-based AI microservice powered by LangChain, LangGraph, and the Gemini API for intelligent resume analysis and career guidance.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Key Features
 
-## React Compiler
+* Secure JWT-based authentication
+* Resume and Job Description upload
+* AI-powered resume parsing
+* ATS score analysis
+* Job Description matching
+* Skill gap identification
+* AI recruiter approval/rejection with feedback
+* Resume improvement suggestions
+* Cover letter and professional email generation
+* Personalized interview question generation
+* Learning roadmap based on missing skills
+* Analysis history and dashboard analytics
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+**Frontend:** React, Vite, Tailwind CSS, shadcn/ui
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+**Backend:** Spring Boot, FastAPI, PostgreSQL
+
+**AI:** LangChain, LangGraph, Gemini API
+
+**Authentication:** Spring Security, JWT
+
+## Architecture
+
+The application follows a microservices architecture where the Spring Boot service manages authentication, business logic, and database operations, while the FastAPI AI service handles all AI-driven analysis and recommendations. This separation improves scalability, maintainability, and independent deployment of services.
