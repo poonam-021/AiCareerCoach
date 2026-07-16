@@ -39,9 +39,9 @@ public class User {
     private String plan = "FREE"; // FREE | PRO
 
     private LocalDateTime planRenewsAt;
-    @NotBlank
-    @Column(nullable = false)
-    private String password; // BCrypt hash
+
+    @Column(nullable = false, unique = true, length = 128)
+    private String firebaseUid;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
