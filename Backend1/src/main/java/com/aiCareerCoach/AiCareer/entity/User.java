@@ -40,8 +40,10 @@ public class User {
 
     private LocalDateTime planRenewsAt;
 
-    @Column(nullable = false, unique = true, length = 128)
-    private String firebaseUid;
+    @NotBlank(message = "Password is required")
+    @Column(nullable = false, length = 255)
+    private String password;
+
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

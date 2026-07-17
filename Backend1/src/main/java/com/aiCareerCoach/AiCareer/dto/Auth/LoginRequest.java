@@ -1,4 +1,2 @@
 package com.aiCareerCoach.AiCareer.dto.Auth;
-
-public record LoginRequest(String email, String password) {
-}
+public record LoginRequest(String email, String password) {}

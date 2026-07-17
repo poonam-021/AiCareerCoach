@@ -1,8 +1,7 @@
 package com.aiCareerCoach.AiCareer.security;
 
-import com.aiCareerCoach.AiCareer.entity.User;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseToken;
+import com.aiCareerCoach.AiCareer.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,34 +19,35 @@ import java.util.List;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private final FirebaseUserSyncService firebaseUserSyncService;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
-    public JwtAuthFilter(FirebaseUserSyncService firebaseUserSyncService) {
-        this.firebaseUserSyncService = firebaseUserSyncService;
+    public JwtAuthFilter(JwtService jwtService, UserRepository userRepository) {
+        this.jwtService = jwtService;
+        this.userRepository = userRepository;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
-
         if (header == null || !header.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = header.substring(7);
-
         try {
-            FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
-            User user = firebaseUserSyncService.syncUser(decodedToken);
+            Claims claims = jwtService.parseAccessToken(header.substring(7));
+            Long userId = Long.parseLong(claims.getSubject());
 
-            var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
-            var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+            userRepository.findById(userId).ifPresent(user -> {
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+                var authToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            });
         } catch (Exception e) {
-            // invalid/expired Firebase token — leave unauthenticated, request continues as anonymous
+            // invalid/expired token — request continues unauthenticated
         }
 
         filterChain.doFilter(request, response);
