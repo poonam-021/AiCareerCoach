@@ -1,5 +1,5 @@
 """
-Agents package — exports all 12 AI agents.
+Agents package — exports all 15 AI agents.
 """
 from .resume_parser import resume_parser_agent
 from .resume_scorer import resume_scorer_agent
@@ -13,6 +13,9 @@ from .resume_rewriter import resume_rewriter_agent
 from .cover_letter import cover_letter_agent
 from .interview_question_generator import interview_question_generator_agent
 from .interview_evaluator import interview_evaluator_agent
+from .jd_parser import jd_parser_agent
+from .recruiter import recruiter_agent
+from .email import email_agent
 
 __all__ = [
     "resume_parser_agent",
@@ -27,4 +30,7 @@ __all__ = [
     "cover_letter_agent",
     "interview_question_generator_agent",
     "interview_evaluator_agent",
+    "jd_parser_agent",
+    "recruiter_agent",
+    "email_agent",
 ]

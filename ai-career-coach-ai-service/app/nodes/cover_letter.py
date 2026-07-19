@@ -1,6 +1,7 @@
 import traceback
 
 from app.workflow.state import WorkflowState
+from app.agents.cover_letter import cover_letter_agent
 from app.services.checkpoint_service import save_checkpoint
 
 
@@ -12,28 +13,24 @@ def cover_letter_node(state: WorkflowState) -> dict:
     completed = list(state.get("completedSteps", []))
 
     try:
-        # Static placeholder — Groq agent not wired into this legacy node
-        name = "Nisha Sangwan"
-        job_title = state.get("parsedJd", {}).get("jobTitle", "Software Developer") if state.get("parsedJd") else "Software Developer"
-        company = state.get("parsedJd", {}).get("company", "the company") if state.get("parsedJd") else "the company"
+        resume_text = state.get("resumeText", "")
+        jd_text = state.get("jdText", "")
 
-        cover_letter = (
-            f"Dear Hiring Manager,\n\n"
-            f"I am {name}, a B.Tech Computer Science graduate with hands-on experience in Python, "
-            f"FastAPI, and AI development. I am excited to apply for the {job_title} position at {company}.\n\n"
-            f"During my internship at CDAC, I worked on AI-powered systems and built production-ready APIs. "
-            f"My projects, including AI Career Coach and Inventory Management System, showcase my ability to "
-            f"deliver full-stack solutions.\n\n"
-            f"I am confident my skills align well with your requirements and I would love the opportunity to "
-            f"contribute to your team.\n\n"
-            f"Sincerely,\n{name}"
+        # Prefer the parsed company name; fall back to the request-level companyName field
+        parsed_jd = state.get("parsedJd") or {}
+        company_name = (
+            parsed_jd.get("company")
+            or state.get("companyName")
+            or "the company"
         )
+
+        result = cover_letter_agent(resume_text, jd_text, company_name)
 
         completed.append("coverLetter")
 
         update = {
             "currentStep": "coverLetter",
-            "coverLetter": cover_letter,
+            "coverLetter": result,
             "completedSteps": completed,
         }
 

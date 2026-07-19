@@ -1,6 +1,7 @@
 import traceback
 
 from app.workflow.state import WorkflowState
+from app.agents.recruiter import recruiter_agent
 from app.services.checkpoint_service import save_checkpoint
 
 
@@ -12,22 +13,27 @@ def recruiter_node(state: WorkflowState) -> dict:
     completed = list(state.get("completedSteps", []))
 
     try:
-        # Static placeholder — Groq agent not wired into this legacy node
-        decision = "SHORTLIST"
-        reasoning = "Candidate has relevant Python and FastAPI skills with internship experience."
+        resume_text = state.get("resumeText", "")
+        jd_text = state.get("jdText", "")
+
+        # Pull ATS score and match% from earlier nodes if available
+        ats_score = state.get("atsScore") or 0.0
+        match_percent = state.get("matchPercent") or 0.0
+
+        result = recruiter_agent(resume_text, jd_text, ats_score, match_percent)
 
         completed.append("recruiter")
 
         update = {
             "currentStep": "recruiter",
-            "recruiterDecision": decision,
-            "recruiterReasoning": reasoning,
+            "recruiterDecision": result.get("decision", "MAYBE"),
+            "recruiterReasoning": result.get("reasoning", ""),
             "completedSteps": completed,
         }
 
         save_checkpoint({**state, **update})
 
-        print("Recruiter Review Completed")
+        print(f"Recruiter Review Completed | decision={result.get('decision', 'N/A')}")
         return update
 
     except Exception as e:

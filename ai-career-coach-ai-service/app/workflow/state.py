@@ -15,7 +15,7 @@ class WorkflowState(TypedDict, total=False):
     resumeText: str
     jdText: str
     difficulty: str          # EASY | MEDIUM | HARD  (for interview questions)
-    companyName: str         # Optional - for cover letter
+    companyName: str         # Optional - for cover letter fallback
 
     # -------------------------------------------------------------------
     # Workflow tracking
@@ -26,33 +26,35 @@ class WorkflowState(TypedDict, total=False):
     error: Optional[str]
 
     # -------------------------------------------------------------------
-    # Agent outputs
+    # Primary agent outputs (used by Spring Boot / frontend)
     # -------------------------------------------------------------------
-    parsedResume: Optional[Any]         # dict from resume_parser
-    resumeScore: Optional[Any]          # dict from resume_scorer
-    atsResult: Optional[Any]            # dict from ats_checker
-    skillGap: Optional[Any]             # dict from skill_gap
-    careerRoles: Optional[Any]          # dict from career_recommender
-    roadmap: Optional[Any]              # dict from roadmap_generator
-    courses: Optional[Any]              # dict from course_recommender
-    projects: Optional[Any]             # dict from project_recommender
-    rewrittenResume: Optional[str]      # str from resume_rewriter
-    coverLetter: Optional[Any]          # dict from cover_letter
-    interviewQuestions: Optional[Any]   # dict from interview_question_generator
-    interviewEvaluation: Optional[Any]  # dict from interview_evaluator
+    parsedResume: Optional[Any]         # dict from resume_parser_agent
+    parsedJd: Optional[Any]             # dict from jd_parser_agent
+    resumeScore: Optional[Any]          # dict from resume_scorer_agent
+    atsResult: Optional[Any]            # dict from ats_checker_agent
+    skillGap: Optional[Any]             # dict from skill_gap_agent
+    careerRoles: Optional[Any]          # dict from career_recommender_agent
+    roadmap: Optional[Any]              # dict from roadmap_generator_agent
+    courses: Optional[Any]              # dict from course_recommender_agent
+    projects: Optional[Any]             # dict from project_recommender_agent
+    coverLetter: Optional[Any]          # dict from cover_letter_agent
+    recruiterDecision: Optional[str]    # "SHORTLIST" | "REJECT" | "MAYBE"
+    recruiterReasoning: Optional[str]   # explanation from recruiter_agent
+    emailDraft: Optional[str]           # generated email text from email_agent
+    feedback: Optional[list]            # list of improvement strings
+
+    # Interview (used by /interview/* endpoints, not the main workflow)
+    rewrittenResume: Optional[str]      # str from resume_rewriter_agent
+    interviewQuestions: Optional[Any]   # dict from interview_question_generator_agent
+    interviewEvaluation: Optional[Any]  # dict from interview_evaluator_agent
 
     # -------------------------------------------------------------------
-    # Legacy fields (kept for backward compatibility)
+    # Convenience / cross-node fields populated by multiple nodes
     # -------------------------------------------------------------------
-    parsedJd: Optional[Any]
-    atsScore: Optional[float]
-    scoreBreakdown: Optional[list]
-    skillGaps: Optional[list]
-    matchPercent: Optional[float]
+    atsScore: Optional[float]           # ats_check_node → recruiter_node
+    matchPercent: Optional[float]       # skill_gap_node → recruiter_node
     matchedKeywords: Optional[list]
     missingKeywords: Optional[list]
-    recruiterDecision: Optional[str]
-    recruiterReasoning: Optional[str]
-    feedback: Optional[list]
-    emailDraft: Optional[str]
+    skillGaps: Optional[list]
+    scoreBreakdown: Optional[list]
     roadmapItems: Optional[list]

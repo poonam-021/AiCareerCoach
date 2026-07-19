@@ -7,7 +7,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Groq model configuration (reads from .env MODEL_NAME)
+# Groq/Llama-3.3 model configuration (reads from .env MODEL_NAME)
 # Default: llama-3.3-70b-versatile
 _PRIMARY_MODEL  = settings.MODEL_NAME          # e.g. "llama-3.3-70b-versatile"
 _FALLBACK_MODEL = "llama-3.1-8b-instant"       # lightweight fallback
@@ -31,9 +31,9 @@ def _make_llm(model: str) -> ChatGroq:
 
 def get_llm(use_fallback: bool = False) -> ChatGroq:
     """
-    Return Groq LLM.
-    Primary  : llama-3.3-70b-versatile  (default, configurable via MODEL_NAME)
-    Fallback : llama-3.1-8b-instant     (lightweight fallback)
+    Return a configured Groq LLM instance.
+    Primary  : llama-3.3-70b-versatile  (default, configurable via MODEL_NAME env var)
+    Fallback : llama-3.1-8b-instant     (lightweight fallback on model-not-found)
     """
     if not settings.GROQ_API_KEY:
         raise ValueError("GROQ_API_KEY is missing in .env")
@@ -129,6 +129,6 @@ def list_available_models() -> list[str]:
         return []
 
 
-# Backward-compat aliases
+# Backward-compat aliases (not used internally)
 llm = None
 llm_fallback = None

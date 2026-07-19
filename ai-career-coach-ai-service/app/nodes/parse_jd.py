@@ -1,7 +1,7 @@
-import json
 import traceback
 
 from app.workflow.state import WorkflowState
+from app.agents.jd_parser import jd_parser_agent
 from app.services.checkpoint_service import save_checkpoint
 
 
@@ -13,13 +13,9 @@ def parse_jd_node(state: WorkflowState) -> dict:
     completed = list(state.get("completedSteps", []))
 
     try:
-        # Static placeholder — Groq agent not wired into this legacy node
-        parsed_jd = {
-            "company": "Google",
-            "jobTitle": "Python Developer",
-            "skills": ["Python", "FastAPI"],
-            "experienceRequired": "2 Years"
-        }
+        jd_text = state.get("jdText", "")
+
+        parsed_jd = jd_parser_agent(jd_text)
 
         completed.append("parseJd")
 
@@ -31,7 +27,7 @@ def parse_jd_node(state: WorkflowState) -> dict:
 
         save_checkpoint({**state, **update})
 
-        print("JD Parsing Completed")
+        print(f"JD Parsing Completed | company={parsed_jd.get('company', 'N/A')} | role={parsed_jd.get('jobTitle', 'N/A')}")
         return update
 
     except Exception as e:

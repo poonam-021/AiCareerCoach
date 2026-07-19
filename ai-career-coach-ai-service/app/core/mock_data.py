@@ -211,3 +211,23 @@ MOCK_INTERVIEW_EVALUATION = {
     "verdict": "GOOD",
     "detailed_feedback": "The answer demonstrates a solid understanding of the core concept. The candidate communicated clearly and used relevant examples. To improve, focus on adding technical depth by discussing trade-offs, edge cases, and performance implications. Using specific metrics from real experience would significantly strengthen the answer."
 }
+
+MOCK_RECRUITER_RESULT = {
+    "decision": "MAYBE",
+    "reasoning": "Candidate shows strong Python and FastAPI skills with internship experience. Missing cloud/DevOps proficiency (Docker, AWS, Kubernetes) that the JD emphasizes. Recommend a technical screening round to assess depth before final decision."
+}
+
+MOCK_EMAIL_DRAFT = {
+    "emailDraft": "Subject: Application for the Position\n\nDear Hiring Team,\n\nI hope this message finds you well. I am writing to express my strong interest in the role advertised. Please find my resume attached for your kind consideration.\n\nI have hands-on experience in Python, FastAPI, and AI/ML development. My internship experience and personal projects demonstrate my ability to build production-ready, scalable applications.\n\nI would welcome the opportunity to discuss how my background aligns with your team\u2019s needs. Please feel free to reach out at your earliest convenience.\n\nThank you for your time and consideration.\n\nBest regards"
+}
+
+MOCK_PARSED_JD = {
+    "company": "the company",
+    "jobTitle": "Software Developer",
+    "skills": ["Python", "FastAPI", "Docker", "AWS"],
+    "experienceRequired": "2+ Years",
+    "jobType": "Full-time",
+    "location": "Remote",
+    "responsibilities": ["Design and develop backend APIs", "Collaborate with cross-functional teams"],
+    "nice_to_have": ["Kubernetes", "CI/CD experience"]
+}
