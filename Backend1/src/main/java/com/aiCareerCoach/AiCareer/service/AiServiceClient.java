@@ -26,10 +26,7 @@ public class AiServiceClient {
         }
     }
 
-    /**
-     * Calls POST /interview/questions on the FastAPI service.
-     * Used to generate the first question of an interview session.
-     */
+
     public InterviewQuestionsResponse generateQuestion(String resumeText, String jdText, String difficulty) {
         try {
             return aiRestClient.post()
