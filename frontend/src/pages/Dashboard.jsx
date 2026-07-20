@@ -7,6 +7,7 @@ import ActivityFeed from "../components/ActivityFeed";
 import ProgressRing from "../components/ProgressRing";
 import PageHeader from "../components/PageHeader";
 import { buildDashboardData } from "../utils/dashboardData";
+import { useAuth } from "../context/AuthContext";
 
 const ROADMAP_SKILLS_KEY = "roadmapSkills";
 
@@ -20,6 +21,7 @@ const SEVERITY_IMPACT = { high: "+9 pts", medium: "+6 pts", low: "+3 pts" };
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [data, setData] = useState({
     resumes: [],
     interviews: [],
@@ -55,7 +57,7 @@ export default function Dashboard() {
   return (
     <main className="flex flex-col gap-6 p-6">
       <PageHeader
-        title="Welcome back, Jordan"
+        title={`Welcome back, ${currentUser?.name || "there"}`}
         subtitle="Here's what your resume analyses and mock interviews show so far."
         action={
           <button

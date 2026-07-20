@@ -26,15 +26,35 @@ public class AiServiceClient {
         }
     }
 
-    public InterviewResponse runInterview(InterviewRequest request) {
+    /**
+     * Calls POST /interview/questions on the FastAPI service.
+     * Used to generate the first question of an interview session.
+     */
+    public InterviewQuestionsResponse generateQuestion(String resumeText, String jdText, String difficulty) {
         try {
             return aiRestClient.post()
-                    .uri("/interview")
-                    .body(request)
+                    .uri("/interview/questions")
+                    .body(new InterviewQuestionsRequest(resumeText, jdText, difficulty))
                     .retrieve()
-                    .body(InterviewResponse.class);
+                    .body(InterviewQuestionsResponse.class);
         } catch (RestClientException e) {
-            throw new AiServiceException("AI service failed during interview call", e);
+            throw new AiServiceException("AI service failed during question generation", e);
+        }
+    }
+
+    /**
+     * Calls POST /interview/evaluate on the FastAPI service.
+     * Used to evaluate a candidate answer and return score + feedback.
+     */
+    public InterviewEvaluateResponse evaluateAnswer(String question, String answer, String expectedRole) {
+        try {
+            return aiRestClient.post()
+                    .uri("/interview/evaluate")
+                    .body(new InterviewEvaluateRequest(question, answer, expectedRole))
+                    .retrieve()
+                    .body(InterviewEvaluateResponse.class);
+        } catch (RestClientException e) {
+            throw new AiServiceException("AI service failed during answer evaluation", e);
         }
     }
 }

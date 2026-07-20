@@ -1,5 +1,6 @@
 package com.aiCareerCoach.AiCareer.controller;
 
+import com.aiCareerCoach.AiCareer.dto.roadmap.RoadmapItemResponse;
 import com.aiCareerCoach.AiCareer.entity.RoadmapItem;
 import com.aiCareerCoach.AiCareer.repository.RoadmapItemRepository;
 import org.springframework.web.bind.annotation.*;
@@ -17,16 +18,28 @@ public class RoadmapController {
     }
 
     @GetMapping("/{analysisReportId}")
-    public List<RoadmapItem> getRoadmap(@PathVariable Long analysisReportId) {
-        return roadmapItemRepository.findByAnalysisReportId(analysisReportId);
+    public List<RoadmapItemResponse> getRoadmap(@PathVariable Long analysisReportId) {
+        return roadmapItemRepository.findByAnalysisReportId(analysisReportId)
+                .stream().map(this::toDto).toList();
     }
 
     public record ToggleRequest(boolean isCompleted) {}
 
     @PutMapping("/items/{id}")
-    public RoadmapItem toggleItem(@PathVariable Long id, @RequestBody ToggleRequest req) {
+    public RoadmapItemResponse toggleItem(@PathVariable Long id, @RequestBody ToggleRequest req) {
         RoadmapItem item = roadmapItemRepository.findById(id).orElseThrow();
         item.setCompleted(req.isCompleted());
-        return roadmapItemRepository.save(item);
+        return toDto(roadmapItemRepository.save(item));
+    }
+
+    private RoadmapItemResponse toDto(RoadmapItem r) {
+        return new RoadmapItemResponse(
+                r.getId(),
+                r.getAnalysisReport() != null ? r.getAnalysisReport().getId() : null,
+                r.getSkill(),
+                r.getResources(),
+                r.isCompleted(),
+                r.getCreatedAt()
+        );
     }
 }

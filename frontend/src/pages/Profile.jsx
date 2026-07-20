@@ -18,9 +18,9 @@ function Field({ label, value, onChange, type = "text" }) {
 
 export default function Profile() {
   const { currentUser, logout } = useAuth();
-  const storageKey = `profile_${currentUser?.uid}`;
+  const storageKey = `profile_${currentUser?.id}`;
 
-  const [fullName, setFullName] = useState(currentUser?.displayName || "");
+  const [fullName, setFullName] = useState(currentUser?.name || "");
   const [targetRole, setTargetRole] = useState("");
   const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
@@ -30,7 +30,7 @@ export default function Profile() {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       const data = JSON.parse(stored);
-      setFullName(data.fullName || currentUser?.displayName || "");
+      setFullName(data.fullName || currentUser?.name || "");
       setTargetRole(data.targetRole || "");
       setLocation(data.location || "");
     }

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Building2, MoreHorizontal, Filter, Trash2, X, AlertCircle } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 
 const STORAGE_KEY = "user_job_descriptions";
+const ROADMAP_SKILLS_KEY = "roadmapSkills";
 
 export default function JobDescriptions() {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

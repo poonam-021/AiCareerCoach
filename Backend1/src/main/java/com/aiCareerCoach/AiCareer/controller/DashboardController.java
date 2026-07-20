@@ -1,5 +1,6 @@
 package com.aiCareerCoach.AiCareer.controller;
 
+import com.aiCareerCoach.AiCareer.dto.dashboard.ActivityLogResponse;
 import com.aiCareerCoach.AiCareer.entity.*;
 import com.aiCareerCoach.AiCareer.repository.*;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +28,7 @@ public class DashboardController {
         List<AnalysisReport> reports = analysisReportRepository.findByUserIdOrderByAnalysisTimestampDesc(user.getId());
         Double latestAts = reports.isEmpty() || reports.get(0).getAtsScore() == null
                 ? null : reports.get(0).getAtsScore().doubleValue();
-        return Map.of("atsScore", latestAts, "totalAnalyses", reports.size());
+        return Map.of("atsScore", latestAts == null ? "" : latestAts, "totalAnalyses", reports.size());
     }
 
     @GetMapping("/trend")
@@ -41,7 +42,16 @@ public class DashboardController {
     }
 
     @GetMapping("/activity")
-    public List<ActivityLog> activity(@AuthenticationPrincipal User user) {
-        return activityLogRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(0, 10));
+    public List<ActivityLogResponse> activity(@AuthenticationPrincipal User user) {
+        return activityLogRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(0, 10))
+                .stream()
+                .map(a -> new ActivityLogResponse(
+                        a.getId(),
+                        a.getType() != null ? a.getType().name() : null,
+                        a.getTitle(),
+                        a.getMeta(),
+                        a.getCreatedAt()
+                ))
+                .toList();
     }
 }

@@ -1,6 +1,7 @@
 package com.aiCareerCoach.AiCareer.controller;
 
 import com.aiCareerCoach.AiCareer.dto.ai.*;
+import com.aiCareerCoach.AiCareer.dto.interview.InterviewSessionResponse;
 import com.aiCareerCoach.AiCareer.entity.*;
 import com.aiCareerCoach.AiCareer.repository.*;
 import com.aiCareerCoach.AiCareer.service.AiServiceClient;
@@ -32,31 +33,38 @@ public class InterviewController {
                                          String nextQuestion, boolean sessionComplete, Integer finalScore) {}
 
     @PostMapping("/sessions")
-    public SessionStartResponse startSession(@AuthenticationPrincipal User user, @RequestBody StartSessionRequest req) {
+    public SessionStartResponse startSession(@AuthenticationPrincipal User user,
+                                             @RequestBody StartSessionRequest req) {
         InterviewSession session = InterviewSession.builder()
                 .user(user).category(req.category()).difficulty(req.difficulty())
                 .questionCount(req.questionCount()).build();
         InterviewSession saved = sessionRepository.save(session);
 
-        InterviewResponse aiResponse = aiServiceClient.runInterview(
-                new InterviewRequest("generate", req.category(), req.difficulty(), List.of(), null, null));
+        // Generate first question via the correct AI endpoint: POST /interview/questions
+        InterviewQuestionsResponse aiResponse = aiServiceClient.generateQuestion(
+                "", "", req.difficulty() != null ? req.difficulty().toUpperCase() : "MEDIUM");
+
+        String firstQuestion = aiResponse.firstQuestion();
+        if (firstQuestion == null) firstQuestion = "Tell me about yourself and your experience.";
 
         InterviewSessionAnswer firstQ = InterviewSessionAnswer.builder()
-                .session(saved).questionText(aiResponse.question()).orderIndex(0).build();
+                .session(saved).questionText(firstQuestion).orderIndex(0).build();
         answerRepository.save(firstQ);
 
-        return new SessionStartResponse(saved.getId(), aiResponse.question());
+        return new SessionStartResponse(saved.getId(), firstQuestion);
     }
 
     @PostMapping("/sessions/{id}/answers")
-    public AnswerFeedbackResponse submitAnswer(@PathVariable Long id, @RequestBody SubmitAnswerRequest req) {
+    public AnswerFeedbackResponse submitAnswer(@PathVariable Long id,
+                                               @RequestBody SubmitAnswerRequest req) {
         InterviewSession session = sessionRepository.findById(id).orElseThrow();
         List<InterviewSessionAnswer> answers = answerRepository.findBySessionIdOrderByOrderIndexAsc(id);
         InterviewSessionAnswer current = answers.get(answers.size() - 1);
         current.setAnswerText(req.answer());
 
-        InterviewResponse evalResult = aiServiceClient.runInterview(
-                new InterviewRequest("evaluate", null, null, null, current.getQuestionText(), req.answer()));
+        // Evaluate the answer via the correct AI endpoint: POST /interview/evaluate
+        InterviewEvaluateResponse evalResult = aiServiceClient.evaluateAnswer(
+                current.getQuestionText(), req.answer(), session.getCategory());
 
         current.setFeedbackLabel(evalResult.feedbackLabel());
         current.setFeedbackTip(evalResult.feedbackTip());
@@ -74,28 +82,44 @@ public class InterviewController {
                     evalResult.feedbackTip(), null, true, avgScore);
         }
 
-        List<PriorAnswer> history = answers.stream()
-                .map(a -> new PriorAnswer(a.getQuestionText(), a.getAnswerText(), evalResult.score()))
-                .toList();
+        // Generate next question
+        InterviewQuestionsResponse nextQ = aiServiceClient.generateQuestion(
+                "", "", evalResult.suggestedNextDifficulty() != null
+                        ? evalResult.suggestedNextDifficulty().toUpperCase() : "MEDIUM");
 
-        InterviewResponse nextQ = aiServiceClient.runInterview(new InterviewRequest(
-                "generate", session.getCategory(), evalResult.suggestedNextDifficulty(), history, null, null));
+        String nextQuestion = nextQ.firstQuestion();
+        if (nextQuestion == null) nextQuestion = evalResult.nextQuestion();
 
         InterviewSessionAnswer nextAnswer = InterviewSessionAnswer.builder()
-                .session(session).questionText(nextQ.question()).orderIndex(answers.size()).build();
+                .session(session).questionText(nextQuestion != null ? nextQuestion : "Next question")
+                .orderIndex(answers.size()).build();
         answerRepository.save(nextAnswer);
 
         return new AnswerFeedbackResponse(evalResult.score(), evalResult.feedbackLabel(),
-                evalResult.feedbackTip(), nextQ.question(), false, null);
+                evalResult.feedbackTip(), nextQuestion, false, null);
     }
 
     @GetMapping("/sessions")
-    public List<InterviewSession> listSessions(@AuthenticationPrincipal User user) {
-        return sessionRepository.findByUserIdOrderByCreatedAtDesc(user.getId());
+    public List<InterviewSessionResponse> listSessions(@AuthenticationPrincipal User user) {
+        return sessionRepository.findByUserIdOrderByCreatedAtDesc(user.getId())
+                .stream().map(this::toDto).toList();
     }
 
     @GetMapping("/sessions/{id}")
-    public InterviewSession getSession(@PathVariable Long id) {
-        return sessionRepository.findById(id).orElseThrow();
+    public InterviewSessionResponse getSession(@PathVariable Long id) {
+        return toDto(sessionRepository.findById(id).orElseThrow());
+    }
+
+    private InterviewSessionResponse toDto(InterviewSession s) {
+        List<InterviewSessionResponse.AnswerResponse> answers = answerRepository
+                .findBySessionIdOrderByOrderIndexAsc(s.getId())
+                .stream()
+                .map(a -> new InterviewSessionResponse.AnswerResponse(
+                        a.getId(), a.getQuestionText(), a.getAnswerText(),
+                        a.getFeedbackLabel(), a.getFeedbackTip(), a.getOrderIndex()))
+                .toList();
+        return new InterviewSessionResponse(
+                s.getId(), s.getCategory(), s.getDifficulty(),
+                s.getQuestionCount(), s.getScore(), s.getCreatedAt(), answers);
     }
 }
