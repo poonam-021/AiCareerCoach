@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "../components/PageHeader";
 import { useAuth } from "../context/AuthContext";
 
@@ -18,17 +18,32 @@ function Field({ label, value, onChange, type = "text" }) {
 
 export default function Profile() {
   const { currentUser, logout } = useAuth();
+  const storageKey = `profile_${currentUser?.uid}`;
 
   const [fullName, setFullName] = useState(currentUser?.displayName || "");
   const [targetRole, setTargetRole] = useState("");
   const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      const data = JSON.parse(stored);
+      setFullName(data.fullName || currentUser?.displayName || "");
+      setTargetRole(data.targetRole || "");
+      setLocation(data.location || "");
+    }
+  }, [storageKey]);
 
   const handleSave = async () => {
     setSaving(true);
+    setSaved(false);
     try {
-      // TODO: update Firestore/user profile here
-      console.log("Saving:", { fullName, targetRole, location });
+      localStorage.setItem(storageKey, JSON.stringify({ fullName, targetRole, location }));
+      await new Promise((r) => setTimeout(r, 400));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
     }
@@ -36,7 +51,6 @@ export default function Profile() {
 
   const handleLogout = async () => {
     await logout();
-    // ProtectedRoute will redirect to /login automatically
   };
 
   return (
@@ -52,13 +66,16 @@ export default function Profile() {
             <Field label="Target role" value={targetRole} onChange={(e) => setTargetRole(e.target.value)} />
             <Field label="Location" value={location} onChange={(e) => setLocation(e.target.value)} />
           </div>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="mt-1 w-fit rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm disabled:opacity-60"
-          >
-            {saving ? "Saving..." : "Save changes"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-fit rounded-lg bg-primary px-4 py-2.5 text-[13px] font-semibold text-white shadow-sm disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+            {saved && <span className="text-[12.5px] font-medium text-green-600">✓ Saved</span>}
+          </div>
         </div>
 
         <div className="col-span-4 flex flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
