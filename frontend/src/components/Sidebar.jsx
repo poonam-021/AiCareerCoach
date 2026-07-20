@@ -8,11 +8,12 @@ import {
   History,
   User,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
   { label: "Resume Analysis", to: "/resume-analysis", icon: FileText },
-  { label: "Job Descriptions", to: "/job-descriptions", icon: Briefcase, count: 6 },
+  { label: "Job Descriptions", to: "/job-descriptions", icon: Briefcase },
   { label: "Interview Prep", to: "/interview-prep", icon: MessagesSquare },
   { label: "Roadmap", to: "/roadmap", icon: TrendingUp },
   { label: "History", to: "/history", icon: History },
@@ -46,7 +47,20 @@ function NavItem({ to, icon: Icon, label, count }) {
   );
 }
 
+function getInitials(nameOrEmail) {
+  if (!nameOrEmail) return "?";
+  const namePart = nameOrEmail.includes("@") ? nameOrEmail.split("@")[0] : nameOrEmail;
+  const parts = namePart.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+}
+
 export default function Sidebar() {
+  const { currentUser } = useAuth();
+
+  const displayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || "User";
+  const initials = getInitials(currentUser?.displayName || currentUser?.email);
+
   return (
     <aside className="sticky top-0 flex h-screen w-[260px] flex-col gap-7 border-r border-border bg-card p-4">
       <div className="flex items-center gap-2.5 px-2">
@@ -75,12 +89,20 @@ export default function Sidebar() {
       </nav>
 
       <NavLink to="/profile" className="mt-auto flex items-center gap-2.5 border-t border-border pt-3.5 pl-2">
-        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-ink-900 text-[12px] font-semibold text-white">
-          JS
-        </div>
+        {currentUser?.photoURL ? (
+          <img
+            src={currentUser.photoURL}
+            alt={displayName}
+            className="h-[30px] w-[30px] shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-ink-900 text-[12px] font-semibold text-white">
+            {initials}
+          </div>
+        )}
         <div>
-          <div className="text-[12.5px] font-semibold text-ink-900">Jordan Silva</div>
-          <div className="text-[11px] text-ink-400">Pro plan</div>
+          <div className="text-[12.5px] font-semibold text-ink-900">{displayName}</div>
+          <div className="text-[11px] text-ink-400">Free plan</div>
         </div>
       </NavLink>
     </aside>
