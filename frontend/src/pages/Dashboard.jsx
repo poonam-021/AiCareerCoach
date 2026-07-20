@@ -1,64 +1,52 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, AlertTriangle, Sparkles } from "lucide-react";
+import { Plus } from "lucide-react";
 import MetricCard from "../components/MetricCard";
 import TrendChart from "../components/TrendChart";
 import ActivityFeed from "../components/ActivityFeed";
-import ProgressRing from "../components/ProgressRing";
 import PageHeader from "../components/PageHeader";
-import { buildDashboardData } from "../utils/dashboardData";
+import * as api from "../utils/apiClients";
 import { useAuth } from "../context/AuthContext";
-
-const ROADMAP_SKILLS_KEY = "roadmapSkills";
-
-const SEVERITY_STYLE = {
-  high: "bg-danger-soft text-danger",
-  medium: "bg-orange-50 text-orange-700",
-  low: "bg-gray-100 text-ink-500",
-};
-
-const SEVERITY_IMPACT = { high: "+9 pts", medium: "+6 pts", low: "+3 pts" };
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [data, setData] = useState({
-    resumes: [],
-    interviews: [],
-    latestResume: null,
-    metrics: [],
-    trendData: [],
-    activity: [],
-  });
+  const [stats, setStats] = useState(null);
+  const [trendData, setTrendData] = useState([]);
+  const [activity, setActivity] = useState([]);
+  const [recentReports, setRecentReports] = useState([]);
 
   useEffect(() => {
-    setData(buildDashboardData());
+    Promise.all([
+      api.get("/dashboard/stats"),
+      api.get("/dashboard/trend"),
+      api.get("/dashboard/activity"),
+      api.get("/history"),
+    ]).then(([statsRes, trendRes, activityRes, historyRes]) => {
+      setStats(statsRes);
+      setTrendData(trendRes);
+      setActivity(activityRes);
+      setRecentReports(historyRes.slice(0, 3));
+    });
   }, []);
 
-  const { resumes, latestResume, metrics, trendData, activity } = data;
-  const recentResumes = [...resumes].reverse().slice(0, 3);
-  const hasAnyHistory = resumes.length > 0 || data.interviews.length > 0;
-
+  const hasAnyHistory = stats && stats.totalAnalyses > 0;
   const goToNewAnalysis = () => navigate("/resume-analysis");
 
-  const generateRoadmap = () => {
-    if (!latestResume) return;
-    localStorage.setItem(
-      ROADMAP_SKILLS_KEY,
-      JSON.stringify({
-        source: latestResume.fileName,
-        generatedAt: new Date().toISOString(),
-        skills: latestResume.skillGaps,
-      })
-    );
-    navigate("/roadmap");
-  };
+  // Shaped to whatever prop array MetricCard previously expected from mockData —
+  // confirm this matches MetricCard's actual prop names, I don't have that file
+  const metrics = stats
+    ? [
+        { label: "Latest ATS Score", value: stats.atsScore === "" ? "—" : stats.atsScore },
+        { label: "Total Analyses", value: stats.totalAnalyses },
+      ]
+    : [];
 
   return (
     <main className="flex flex-col gap-6 p-6">
       <PageHeader
         title={`Welcome back, ${currentUser?.name || "there"}`}
-        subtitle="Here's what your resume analyses and mock interviews show so far."
+        subtitle="Here's how your applications are performing this week."
         action={
           <button
             onClick={goToNewAnalysis}
@@ -72,11 +60,9 @@ export default function Dashboard() {
 
       {!hasAnyHistory && (
         <div className="rounded-xl border border-dashed border-border bg-card p-6 text-center shadow-sm">
-          <div className="text-[13.5px] font-semibold text-ink-900">
-            Your dashboard is empty for now
-          </div>
+          <div className="text-[13.5px] font-semibold text-ink-900">Your dashboard is empty for now</div>
           <div className="mt-1 text-[12.5px] text-ink-500">
-            Run a resume analysis or a mock interview session, and your real stats will appear here.
+            Run a resume analysis, and your real stats will appear here.
           </div>
         </div>
       )}
@@ -90,108 +76,31 @@ export default function Dashboard() {
         <ActivityFeed items={activity} />
 
         <div className="col-span-12 mt-1 flex items-baseline justify-between">
-          <div className="text-[16px] font-bold tracking-tight">Recent Resume Analyses</div>
+          <div className="text-[16px] font-bold tracking-tight">Recent Analyses</div>
         </div>
 
-        {recentResumes.length === 0 ? (
+        {recentReports.length === 0 ? (
           <div className="col-span-12 rounded-xl border border-border bg-card p-8 text-center shadow-sm">
             <div className="text-[13px] text-ink-500">
-              No resume analyses yet — run one from the Resume Analysis page.
+              No analyses yet — run one from the Resume Analysis page.
             </div>
           </div>
         ) : (
-          recentResumes.map((r, i) => (
+          recentReports.map((r) => (
             <div
-              key={i}
-              className="col-span-4 flex flex-col gap-3.5 rounded-xl border border-border bg-card p-[18px] shadow-sm"
+              key={r.id}
+              onClick={() => navigate(`/roadmap/${r.id}`)}
+              className="col-span-4 flex cursor-pointer flex-col gap-2 rounded-xl border border-border bg-card p-[18px] shadow-sm hover:border-primary"
             >
-              <div>
-                <div className="text-[13.5px] font-semibold">{r.fileName}</div>
-                <div className="mt-0.5 text-[12px] text-ink-500">
-                  Analyzed {new Date(r.date).toLocaleDateString()}
-                </div>
+              <div className="text-[12px] text-ink-500">
+                {new Date(r.analysisTimestamp).toLocaleDateString()}
               </div>
-
-              <div className="flex items-center gap-4.5">
-                <ProgressRing
-                  percent={r.atsScore}
-                  color={r.atsScore >= 75 ? "#059669" : r.atsScore >= 50 ? "#D97706" : "#DC2626"}
-                />
-                <div>
-                  <div className="text-[12.5px] font-semibold text-ink-900">ATS Score</div>
-                  <div className="mt-0.5 text-[11.5px] text-ink-400">
-                    {r.skillGaps.length} skill gap{r.skillGaps.length !== 1 ? "s" : ""} found
-                  </div>
-                </div>
+              <div className="text-[13.5px] font-semibold">
+                ATS Score: {r.atsScore ?? "—"} · Match: {r.matchPercentage ?? "—"}%
               </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                {r.skillGaps.map((g) => (
-                  <span
-                    key={g.skill}
-                    className={`rounded-md px-2 py-1 text-[10.5px] font-semibold ${SEVERITY_STYLE[g.severity]}`}
-                  >
-                    {g.skill}
-                  </span>
-                ))}
-              </div>
+              <div className="text-[12px] text-ink-400 capitalize">{r.status?.toLowerCase()}</div>
             </div>
           ))
-        )}
-
-        <div className="col-span-12 mt-1 flex items-baseline justify-between">
-          <div className="text-[16px] font-bold tracking-tight">Optimization Suggestions</div>
-          {latestResume && (
-            <span className="text-[12.5px] font-semibold text-ink-400">
-              Based on: {latestResume.fileName}
-            </span>
-          )}
-        </div>
-
-        {!latestResume ? (
-          <div className="col-span-12 rounded-xl border border-border bg-card p-8 text-center shadow-sm">
-            <div className="text-[13px] text-ink-500">
-              Run a resume analysis to get personalized optimization suggestions here.
-            </div>
-          </div>
-        ) : (
-          <div className="col-span-12 rounded-xl border border-border bg-card shadow-sm">
-            {latestResume.skillGaps.map((g, i) => (
-              <div
-                key={g.skill}
-                className={`flex items-center gap-3 px-5 py-4 ${
-                  i < latestResume.skillGaps.length - 1 ? "border-b border-border-soft" : ""
-                }`}
-              >
-                <span className="w-[18px] text-[11px] font-bold text-ink-400">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                  <AlertTriangle size={14} />
-                </div>
-                <div>
-                  <div className="text-[13.5px] font-semibold text-ink-900">
-                    Add missing skill: "{g.skill}"
-                  </div>
-                  <div className="mt-px text-[12px] text-ink-400 capitalize">
-                    {g.severity} priority gap
-                  </div>
-                </div>
-                <span className="ml-auto rounded-md bg-success-soft px-2.5 py-1 text-[11px] font-semibold text-success">
-                  {SEVERITY_IMPACT[g.severity]}
-                </span>
-              </div>
-            ))}
-            <div className="px-5 py-4">
-              <button
-                onClick={generateRoadmap}
-                className="flex items-center gap-1.5 text-[12.5px] font-semibold text-primary"
-              >
-                <Sparkles size={14} />
-                Generate full roadmap for these gaps
-              </button>
-            </div>
-          </div>
         )}
       </div>
     </main>

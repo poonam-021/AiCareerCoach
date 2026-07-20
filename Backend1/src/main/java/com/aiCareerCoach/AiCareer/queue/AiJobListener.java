@@ -90,9 +90,17 @@ public class AiJobListener {
             String status = result.status();
             report.setStatus("PARTIAL".equals(status) ? AnalysisStatus.PARTIAL : AnalysisStatus.valueOf(status));
 
-        } catch (Exception e) {
-            report.setStatus(AnalysisStatus.FAILED);
+        }catch (Exception e) {
+        System.out.println("Analysis failed for report " + payload.analysisReportId() + ": " + e.getMessage());
+        Throwable cause = e.getCause();
+        int depth = 1;
+        while (cause != null) {
+            System.out.println("  ".repeat(depth) + "caused by [" + cause.getClass().getName() + "]: " + cause.getMessage());
+            cause = cause.getCause();
+            depth++;
         }
+        report.setStatus(AnalysisStatus.FAILED);
+    }
 
         analysisReportRepository.save(report);
     }

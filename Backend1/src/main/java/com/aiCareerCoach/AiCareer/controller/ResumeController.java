@@ -4,6 +4,7 @@ import com.aiCareerCoach.AiCareer.dto.Resume.ResumeResponse;
 import com.aiCareerCoach.AiCareer.entity.Resume;
 import com.aiCareerCoach.AiCareer.entity.User;
 import com.aiCareerCoach.AiCareer.repository.ResumeRepository;
+import com.aiCareerCoach.AiCareer.service.ResumeTextExtractor;
 import com.aiCareerCoach.AiCareer.service.S3StorageService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +18,19 @@ public class ResumeController {
 
     private final ResumeRepository resumeRepository;
     private final S3StorageService storageService;
+    private final ResumeTextExtractor textExtractor;
 
-    public ResumeController(ResumeRepository resumeRepository, S3StorageService storageService) {
+    public ResumeController(ResumeRepository resumeRepository, S3StorageService storageService,
+                            ResumeTextExtractor textExtractor) {
         this.resumeRepository = resumeRepository;
         this.storageService = storageService;
+        this.textExtractor = textExtractor;
     }
 
     @PostMapping("/upload")
     public ResumeResponse upload(@AuthenticationPrincipal User user, @RequestParam MultipartFile file) {
         String storagePath = storageService.upload(user.getId(), file);
+        String extractedText = textExtractor.extractText(file);
 
         Resume resume = Resume.builder()
                 .user(user)
@@ -33,6 +38,7 @@ public class ResumeController {
                 .storagePath(storagePath)
                 .fileType(file.getContentType())
                 .fileSize(file.getSize())
+                .parsedText(extractedText)
                 .isActive(true)
                 .build();
 

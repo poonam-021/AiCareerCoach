@@ -21,6 +21,7 @@ public class AiServiceClient {
                     .body(new WorkflowRunRequest(resumeText, jdText, analysisReportId, "MEDIUM", companyName))
                     .retrieve()
                     .body(WorkflowEnvelope.class);
+
         } catch (RestClientException e) {
             throw new AiServiceException("AI service failed during workflow run", e);
         }
