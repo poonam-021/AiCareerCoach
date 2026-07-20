@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import AuthLayout from "../components/AuthLayout";
+import AuthLayout from "../components/authlayout";
 import FormField from "../components/FormField";
 import { useAuth } from "../context/AuthContext";
 
