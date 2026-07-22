@@ -7,6 +7,7 @@ import {
   TrendingUp,
   History,
   User,
+  X,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -21,11 +22,12 @@ const NAV_ITEMS = [
 
 const ACCOUNT_ITEMS = [{ label: "Profile", to: "/profile", icon: User }];
 
-function NavItem({ to, icon: Icon, label, count }) {
+function NavItem({ to, icon: Icon, label, count, onClick }) {
   return (
     <NavLink
       to={to}
       end={to === "/"}
+      onClick={onClick}
       className={({ isActive }) =>
         `flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-medium transition-colors ${
           isActive ? "bg-primary-soft text-primary" : "text-ink-700 hover:bg-gray-100"
@@ -55,40 +57,45 @@ function getInitials(nameOrEmail) {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { currentUser } = useAuth();
-
   const displayName = currentUser?.displayName || currentUser?.email?.split("@")[0] || "User";
   const initials = getInitials(currentUser?.displayName || currentUser?.email);
 
-  return (
-    <aside className="sticky top-0 flex h-screen w-[260px] flex-col gap-7 border-r border-border bg-card p-4">
+  const content = (
+    <>
       <div className="flex items-center gap-2.5 px-2">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-blue-700 text-[13px] font-bold text-white">
           AC
         </div>
-        <div>
+        <div className="flex-1">
           <div className="text-[14.5px] font-bold tracking-tight text-ink-900">
             AI Career Coach
           </div>
           <div className="-mt-0.5 text-[10.5px] font-medium text-ink-400">Workspace</div>
         </div>
+        <button onClick={onClose} className="rounded-lg p-1.5 text-ink-500 hover:bg-gray-100 lg:hidden">
+          <X size={18} />
+        </button>
       </div>
 
       <nav className="flex flex-col gap-0.5">
         {NAV_ITEMS.map((item) => (
-          <NavItem key={item.label} {...item} />
+          <NavItem key={item.label} {...item} onClick={onClose} />
         ))}
-
         <div className="mb-1.5 mt-3.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-ink-400">
           Account
         </div>
         {ACCOUNT_ITEMS.map((item) => (
-          <NavItem key={item.label} {...item} />
+          <NavItem key={item.label} {...item} onClick={onClose} />
         ))}
       </nav>
 
-      <NavLink to="/profile" className="mt-auto flex items-center gap-2.5 border-t border-border pt-3.5 pl-2">
+      <NavLink
+        to="/profile"
+        onClick={onClose}
+        className="mt-auto flex items-center gap-2.5 border-t border-border pt-3.5 pl-2"
+      >
         {currentUser?.photoURL ? (
           <img
             src={currentUser.photoURL}
@@ -105,6 +112,25 @@ export default function Sidebar() {
           <div className="text-[11px] text-ink-400">Free plan</div>
         </div>
       </NavLink>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible */}
+      <aside className="sticky top-0 hidden h-screen w-[260px] flex-col gap-7 border-r border-border bg-card p-4 lg:flex">
+        {content}
+      </aside>
+
+      {/* Mobile/tablet drawer */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+          <aside className="absolute left-0 top-0 flex h-screen w-[260px] max-w-[80vw] flex-col gap-7 border-r border-border bg-card p-4 shadow-xl">
+            {content}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
